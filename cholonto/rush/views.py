@@ -1,8 +1,8 @@
 from django.db.models import Count
 
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from django.views import View
-from .models import Services, Customer
+from .models import Services, Customer, Cart
 from .forms import RegistrationForm, CustomerProfileForm
 from django.contrib import messages
 
@@ -76,5 +76,49 @@ class ProfileView(View):
             messages.warning(request,"Profile not saved")
 
         return render(request,"app/profile.html",locals())
+
+
+def address(request):
+    add=Customer.objects.filter(user=request.user)
+    return render(request,"app/address.html",locals())
+
+class updateAddress(View):
+    def get(self,request,pk):
+        add=Customer.objects.get(pk=pk)
+        form=CustomerProfileForm(instance=add)
+        return render(request,"app/updateAddress.html",locals())
+    def post(self,request,pk):
+        form=CustomerProfileForm(request.POST)
+
+        if form.is_valid():
+            add=Customer.objects.get(pk=pk)
+            add.name=form.cleaned_data['name']
+            add.locality=form.cleaned_data['locality']
+            add.city=form.cleaned_data['city']
+            add.mobile=form.cleaned_data['mobile']
+            add.state=form.cleaned_data['state']
+            add.zipcode=form.cleaned_data['zipcode']
+            add.save()
+            messages.success(request,"Address updated successfully")
+        else:
+            messages.warning(request,"Address not updated")
+        return redirect('address')
+
+def add_to_cart(request):
+    user=request.user
+    product_id=request.GET.get('prod_id')
+    product=Services.objects.get(id=product_id)
+    Cart(user=user,product=product).save()
+    return redirect("/cart")
+
+def show_cart(request):
+    user=request.user
+    cart=Cart.objects.filter(user=user)
+    amount=0
+    for p in cart:
+        value=p.quantity*p.product.discounted_price
+        amount=amount+value
+    totalamount = amount + 40
+    return render(request, 'app/addtocart.html', locals())
 
 
