@@ -57,3 +57,4 @@ class Cart(models.Model):
         return self.quantity * self.product.discounted_price
 
 
+

@@ -122,3 +122,4 @@ def show_cart(request):
     return render(request, 'app/addtocart.html', locals())
 
 
+
